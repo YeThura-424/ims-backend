@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'username' => ['required', 'string', 'max:255', 'exists:users,username'],
+            'password' => [
+                'required'
+            ],
+            'remember' => 'boolean'
+        ]);
+        $remember = $credentials['remember'] ?? false;
+        unset($credentials['remember']);
+
+        if (!Auth::attempt($credentials, $remember)) {
+            return response([
+                'error' => 'The Provided credentials are not correct'
+            ], 422);
+        }
+        $user = Auth::user();
+        $token = $user->createToken('main')->plainTextToken;
+
+        return response([
+            'user' => $user,
+            'token' => $token
+        ]);
+    }
+}
