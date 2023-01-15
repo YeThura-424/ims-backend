@@ -90,17 +90,6 @@ class CategoryController extends Controller
     public function show($id)
     {
         $category = Category::find($id);
-        // $result = new CategoryResource($category);
-        // $message = 'Product retrieved successfully.';
-        // $status = 200;
-
-        // $response = [
-        //     'status' => $status,
-        //     'success' => true,
-        //     'message' => $message,
-        //     'data' => $result,
-        // ];
-        // return response()->json($response);
         if (is_null($category)) {
             $status = 404;
             $message = 'Category not found';
@@ -126,17 +115,6 @@ class CategoryController extends Controller
 
             return response()->json($response);
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
     }
 
     /**
