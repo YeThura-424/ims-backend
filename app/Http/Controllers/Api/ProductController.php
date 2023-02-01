@@ -96,4 +96,91 @@ class ProductController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $product = Product::find($id);
+
+        if (is_null($product)) {
+            $status = 404;
+            $message = 'Product not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $status = 200;
+            $message = 'Product retrieved successfully';
+            $result = new ProductResource($product);
+
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ];
+
+            return response()->json($response);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $product = Product::find($id);
+        $name = $request->name;
+        $code = $request->code;
+        $uom = $request->uom;
+        $qty = $request->qty;
+        $sku = $name . '-' . $uom;
+        $newphoto = $request->photo;
+        $oldphoto = $product->photo;
+        if ($request->hasFile('photo')) {
+            $imageName = time() . '.' . $newphoto->extension();
+            $newphoto->move(public_path('images/product'), $imageName);
+            $filepath = 'images/product/' . $imageName;
+            if (File::exists(public_path($oldphoto))) {
+                File::delete(public_path($oldphoto));
+            }
+        } else {
+            $filepath = $oldphoto;
+        }
+        // Data update
+        $product->name = $name;
+        $product->code = $code;
+        $product->uom = $uom;
+        $product->sku = $sku;
+        $product->qty = $qty;
+        $product->photo = $filepath;
+        $product->save();
+
+        $status = 200;
+        $message = 'Product update successfully';
+        $result = new ProductResource($product);
+
+        $response = [
+            'status' => $status,
+            'success' => true,
+            'message' => $message,
+            'data' => $result,
+        ];
+
+        return response()->json($response);
+    }
 }
