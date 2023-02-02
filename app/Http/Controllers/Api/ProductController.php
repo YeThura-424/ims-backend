@@ -183,4 +183,41 @@ class ProductController extends Controller
 
         return response()->json($response);
     }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $product = Product::find($id);
+
+        if (is_null($product)) {
+            $status = 404;
+            $message = 'Product not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $product->delete();
+            $status = 200;
+            $message = 'Product deleted successfully';
+
+
+            $response = [
+                'success' => true,
+                'status' => $status,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        }
+    }
 }
