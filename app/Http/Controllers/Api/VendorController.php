@@ -93,4 +93,41 @@ class VendorController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $vendor = Vendor::find($id);
+
+        if (is_null($vendor)) {
+            $status = 404;
+            $message = 'Vendor not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $status = 200;
+            $message = 'Vendor retrieved successfully';
+            $result = new VendorResource($vendor);
+
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ];
+
+            return response()->json($response);
+        }
+    }
 }
