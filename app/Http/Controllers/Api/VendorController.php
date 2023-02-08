@@ -130,4 +130,87 @@ class VendorController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $vendor = Vendor::find($id);
+
+        $name = $request->name;
+        $code = $request->code;
+        $type = $request->type;
+        $paymenttype = $request->paymenttype;
+        $isactive = $request->status;
+        if ($isactive == "true") {
+            $is_active = 1;
+        } else {
+            $is_active = 0;
+        }
+
+
+
+        //Data Update
+
+        $vendor->name = $name;
+        $vendor->code = $code;
+        $vendor->type = $type;
+        $vendor->paymenttype = $paymenttype;
+        $vendor->is_active = $is_active;
+        $vendor->save();
+
+        $status = 200;
+        $message = "Vendor Updated Successfully";
+        $result = new VendorResource($vendor);
+
+        $response = [
+            'status' => $status,
+            'success' => true,
+            'message' => $message,
+            'data' => $result,
+        ];
+        return response()->json($response);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $vendor = Vendor::find($id);
+
+        if (is_null($vendor)) {
+            $status = 404;
+            $message = 'Vendor not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $vendor->delete();
+            $status = 200;
+            $message = 'Vendor deleted successfully';
+
+
+            $response = [
+                'success' => true,
+                'status' => $status,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        }
+    }
 }
