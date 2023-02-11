@@ -30,4 +30,11 @@ class Product extends Model
     {
         return $this->belongsTo('App\Models\Brand');
     }
+
+    public function importtowarehouses()
+    {
+        return $this->belongsToMany('App\Models\ImportToWarehouse', 'importdetails', 'importtowarehouse_id', 'product_id')
+            ->withPivot('qty', 'rate', 'productamount')
+            ->withTimestamps();
+    }
 }
