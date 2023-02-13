@@ -118,4 +118,51 @@ class ImportToWarehouseController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $importtowarehouse = ImportToWarehouse::find($id);
+        $importProduct = [];
+        foreach ($importtowarehouse->products as $product_detail) {
+            $importProduct[] = [
+                'id' => $product_detail->pivot->product_id,
+                'name' => $product_detail->sku,
+                'receiveqty' => $product_detail->pivot->qty,
+                'previous_qty' => $product_detail->pivot->qty,
+                'rate' => $product_detail->pivot->rate,
+                'productamount' => $product_detail->pivot->productamount,
+            ];
+        }
+        if (is_null($importtowarehouse)) {
+            $status = 404;
+            $message = 'Import not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $status = 200;
+            $message = 'Import retrieved successfully';
+            $result = new ImportToWarehouseResource($importtowarehouse);
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+                'product' => $importProduct
+            ];
+
+            return response()->json($response);
+        }
+    }
 }
