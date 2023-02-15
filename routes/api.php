@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ImportToWarehouseController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\VendorController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiresource('brands', BrandController::class);
     Route::apiresource('products', ProductController::class);
     Route::apiresource('vendors', VendorController::class);
+    Route::apiresource('importtowarehouses', ImportToWarehouseController::class);
 });
 
 

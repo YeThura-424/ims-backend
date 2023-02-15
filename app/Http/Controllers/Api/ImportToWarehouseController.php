@@ -165,4 +165,97 @@ class ImportToWarehouseController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $warehouseimport = ImportToWarehouse::find($id);
+        $importcode = $request->importcode;
+        $date = $request->date;
+        $invoicedate = $request->invoicedate;
+        $vendor = $request->vendor;
+        $invoiceno = $request->invoiceno;
+        $totalamount = $request->totalamount;
+        $remark = $request->remark;
+        $importItem = json_decode($request->importItem);
+        $productsToRemove = json_decode($request->productsToRemove);
+        $newphoto = $request->photo;
+        $oldphoto = $warehouseimport->photo;
+        if ($request->hasFile('photo')) {
+            $imageName = time() . '.' . $newphoto->extension();
+            $newphoto->move(public_path('images/warehouseimport'), $imageName);
+            $filepath = 'images/warehouseimport/' . $imageName;
+            if (File::exists(public_path($oldphoto))) {
+                File::delete(public_path($oldphoto));
+            }
+        } else {
+            $filepath = $oldphoto;
+        }
+
+        // Data update
+        $warehouseimport->importcode = $importcode;
+        $warehouseimport->date = $date;
+        $warehouseimport->invoicedate = $invoicedate;
+        $warehouseimport->vendor_id = $vendor;
+        $warehouseimport->invoiceno = $invoiceno;
+        $warehouseimport->photo = $filepath;
+        $warehouseimport->totalamount = $totalamount;
+        $warehouseimport->remark = $remark;
+        $warehouseimport->save();
+
+        // Update or add products
+        if ($importItem !== null) {
+            $productData = [];
+            foreach ($importItem as $item) {
+                $productId = $item->id;
+                $qty = $item->receiveqty;
+                $previous_qty = $item->previous_qty;
+                $updated_qty = $qty - $previous_qty;
+
+                $rate = $item->rate;
+                $amount = $item->productamount;
+
+                $productData[$productId] = [
+                    'qty' => $qty,
+                    'rate' => $rate,
+                    'productamount' => $amount,
+                ];
+            }
+            $warehouseimport->products()->sync($productData);
+
+            // Remove products from the import if needed
+            if ($productsToRemove !== null) {
+
+                foreach ($productsToRemove as $productToRemove) {
+                    $productToRemoveId = $productToRemove->id;
+                    $removedProductQty = $productToRemove->qty;
+
+                    $product = Product::find($productToRemoveId);
+                    $productQty = $product->qty;
+                    $updateQty = $productQty - $removedProductQty;
+                    // Adjust the product quantity as needed based on your business logic
+                    $product->qty = $updateQty;
+                    $product->save();
+                }
+            }
+        }
+        $status = 200;
+        $message = 'Import updated successfully';
+        $result = new ImportToWarehouseResource($warehouseimport);
+
+        $response = [
+            'status' => $status,
+            'success' => true,
+            'message' => $message,
+            'data' => $result,
+        ];
+
+        return response()->json($response);
+    }
 }
