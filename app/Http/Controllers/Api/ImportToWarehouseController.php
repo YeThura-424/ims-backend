@@ -258,4 +258,44 @@ class ImportToWarehouseController extends Controller
 
         return response()->json($response);
     }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $warehouseimport = ImportToWarehouse::find($id);
+
+        if (is_null($warehouseimport)) {
+            $status = 404;
+            $message = 'Import not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+
+            // Soft delete the importtowarehouse record
+            $warehouseimport->delete();
+
+            $status = 200;
+            $message = 'Import deleted successfully';
+
+
+            $response = [
+                'success' => true,
+                'status' => $status,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        }
+    }
 }
