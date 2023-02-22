@@ -152,4 +152,78 @@ class SaleInvoiceController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $saleinvoice = SaleInvoice::find($id);
+        $orderno = $request->orderno;
+        $saledate = $request->saledate;
+        $totalamount = $request->totalamount;
+        $remark = $request->remark;
+        $saleItem = json_decode($request->saleItem);
+        $productsToRemove = json_decode($request->productsToRemove);
+
+        // Data update
+
+        $saleinvoice->saledate = $saledate;
+        $saleinvoice->orderno = $orderno;
+        $saleinvoice->remark = $remark;
+        $saleinvoice->totalamount = $totalamount;
+        $saleinvoice->save();
+
+        // Update or add products
+        if ($saleItem !== null) {
+            $productData = [];
+            foreach ($saleItem as $item) {
+                $productId = $item->id;
+                $qty = $item->qty;
+                $previous_qty = $item->previous_qty;
+                $updated_qty = $qty - $previous_qty;
+                $rate = $item->rate;
+                $amount = $item->productamount;
+
+                $productData[$productId] = [
+                    'qty' => $qty,
+                    'rate' => $rate,
+                    'productamount' => $amount,
+                ];
+            }
+            $saleinvoice->products()->sync($productData);
+
+            // Remove products from the import if needed
+            if ($productsToRemove !== null) {
+
+                foreach ($productsToRemove as $productToRemove) {
+                    $productToRemoveId = $productToRemove->id;
+                    $removedProductQty = $productToRemove->qty;
+
+                    $product = Product::find($productToRemoveId);
+                    $productQty = $product->qty;
+                    $updateQty = $productQty + $removedProductQty;
+                    // Adjust the product quantity as needed based on your business logic
+                    $product->qty = $updateQty;
+                    $product->save();
+                }
+            }
+        }
+        $status = 200;
+        $message = 'Sale updated successfully';
+        $result = new SaleInvoiceResource($saleinvoice);
+
+        $response = [
+            'status' => $status,
+            'success' => true,
+            'message' => $message,
+            'data' => $result,
+        ];
+
+        return response()->json($response);
+    }
 }
