@@ -104,4 +104,52 @@ class SaleInvoiceController extends Controller
             return response()->json($response);
         }
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $saleinvoice = SaleInvoice::find($id);
+        $combinedData = [];
+        foreach ($saleinvoice->products as $product_detail) {
+            $combinedData[] = [
+                'id' => $product_detail->pivot->product_id,
+                'name' => $product_detail->sku,
+                "remainingqty" => $product_detail->qty,
+                'saleqty' => $product_detail->pivot->qty,
+                'previous_qty' => $product_detail->pivot->qty,
+                'rate' => $product_detail->pivot->rate,
+                'productamount' => $product_detail->pivot->productamount,
+            ];
+        }
+        if (is_null($saleinvoice)) {
+            $status = 404;
+            $message = 'Sale not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $status = 200;
+            $message = 'Sale retrieved successfully';
+            $result = new SaleInvoiceResource($saleinvoice);
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+                'product' => $combinedData
+            ];
+
+            return response()->json($response);
+        }
+    }
 }
