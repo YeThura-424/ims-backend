@@ -37,4 +37,11 @@ class Product extends Model
             ->withPivot('qty', 'rate', 'productamount')
             ->withTimestamps();
     }
+
+    public function saleinvoices()
+    {
+        return $this->belongsToMany('App\Models\SaleInvoice', 'saledetails', 'saleinvoice_id', 'product_id')
+            ->withPivot('qty', 'rate', 'productamount')
+            ->withTimestamps();
+    }
 }
