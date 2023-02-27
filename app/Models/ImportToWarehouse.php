@@ -44,6 +44,12 @@ class ImportToWarehouse extends Model
             ->withPivot('qty', 'rate', 'productamount')
             ->withTimestamps();
     }
+
+    public function transactions()
+    {
+        return $this->hasMany('App\Models\ProductTransection');
+    }
+
     public static function boot()
     {
         parent::boot();

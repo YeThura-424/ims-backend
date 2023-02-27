@@ -39,6 +39,11 @@ class SaleInvoice extends Model
             ->withTimestamps();
     }
 
+    public function transactions()
+    {
+        return $this->hasMany('App\Models\ProductTransection');
+    }
+
     public static function boot()
     {
         parent::boot();

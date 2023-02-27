@@ -44,4 +44,9 @@ class Product extends Model
             ->withPivot('qty', 'rate', 'productamount')
             ->withTimestamps();
     }
+
+    public function transections()
+    {
+        return $this->hasMany('App\Model\ProductTransection');
+    }
 }
