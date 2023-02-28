@@ -89,6 +89,14 @@ class SaleInvoiceController extends Controller
                 $closing = $opening - $qty;
                 $product->qty = $closing;
                 $product->save();
+
+                $saleinvoice->transactions()->create([
+                    'type' => 'Sale',
+                    'product_id' => $id,
+                    'opening' => $opening,
+                    'out' => $qty,
+                    'closing' => $closing
+                ]);
             }
             $status = 200;
             $message = 'Sale created successfully.';
