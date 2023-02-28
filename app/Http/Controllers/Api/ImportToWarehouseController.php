@@ -8,6 +8,7 @@ use App\Http\Resources\ImportToWarehouseResource;
 use App\Models\ImportToWarehouse;
 use Validator;
 use App\Models\Product;
+use App\Models\ProductTransection;
 
 class ImportToWarehouseController extends Controller
 {
@@ -103,6 +104,14 @@ class ImportToWarehouseController extends Controller
                 $product->qty = $closing;
                 $product->buyingprice = $rate;
                 $product->save();
+
+                $importtowarehouse->transactions()->create([
+                    'type' => 'Purchase',
+                    'product_id' => $id,
+                    'opening' => $opening,
+                    'in' => $qty,
+                    'closing' => $closing
+                ]);
             }
             $status = 200;
             $message = 'Import created successfully.';
@@ -197,8 +206,8 @@ class ImportToWarehouseController extends Controller
         } else {
             $filepath = $oldphoto;
         }
-
         // Data update
+
         $warehouseimport->importcode = $importcode;
         $warehouseimport->date = $date;
         $warehouseimport->invoicedate = $invoicedate;
@@ -221,11 +230,56 @@ class ImportToWarehouseController extends Controller
                 $rate = $item->rate;
                 $amount = $item->productamount;
 
+
+
                 $productData[$productId] = [
                     'qty' => $qty,
                     'rate' => $rate,
                     'productamount' => $amount,
                 ];
+
+                // Update or create the transaction for this product
+                $transaction = $warehouseimport->transactions()->where('product_id', $productId)->first();
+                if ($transaction) {
+                    // Update product qty
+                    if ($updated_qty !== 0) {
+                        $product = Product::find($productId);
+                        $opening = $product->qty;
+                        $closing = $opening + $updated_qty;
+                        $product->qty = $closing;
+                        $product->save();
+
+
+                        $transaction = new ProductTransection([
+                            'type' => 'Purchase',
+                            'product_id' => $productId,
+                            'opening' => $opening,
+                            'in' => $updated_qty,
+                            'closing' => $closing
+                        ]);
+                        $warehouseimport->transactions()->save($transaction);
+                    }
+                } else {
+
+                    $product = Product::find($productId);
+                    $opening = $product->qty;
+                    $closing = $opening + $qty;
+                    $product->qty = $closing;
+                    $product->save();
+                    // If the transaction doesn't exist, create a new one
+                    $transaction = new ProductTransection([
+                        'type' => 'Purchase',
+                        'product_id' => $productId,
+                        'opening' => $opening,
+                        'in' => $qty,
+                        'closing' => $closing
+                    ]);
+                    $warehouseimport->transactions()->save($transaction);
+                }
+
+                $product = Product::find($productId);
+                $product->buyingprice = $rate;
+                $product->save();
             }
             $warehouseimport->products()->sync($productData);
 
@@ -242,6 +296,12 @@ class ImportToWarehouseController extends Controller
                     // Adjust the product quantity as needed based on your business logic
                     $product->qty = $updateQty;
                     $product->save();
+
+                    $transaction = $warehouseimport->transactions()->where('product_id', $productToRemoveId)->first();
+
+                    if ($transaction) {
+                        $transaction->delete();
+                    }
                 }
             }
         }
