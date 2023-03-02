@@ -8,6 +8,7 @@ use App\Models\SaleInvoice;
 use App\Http\Resources\SaleInvoiceResource;
 use Validator;
 use App\Models\Product;
+use App\Models\ProductTransection;
 
 class SaleInvoiceController extends Controller
 {
@@ -202,6 +203,39 @@ class SaleInvoiceController extends Controller
                     'rate' => $rate,
                     'productamount' => $amount,
                 ];
+
+                $transaction = $saleinvoice->transactions()->where('product_id', $productId)->first();
+                if ($transaction) {
+                    // Update product qty
+                    $product = Product::find($productId);
+                    $previous_product_qty = $product->qty;
+                    $opening = $previous_product_qty + $previous_qty;
+                    $closing = $opening - $qty;
+                    $product->qty = $closing;
+                    $product->save();
+                    // If the transaction exists, update its values
+                    $transaction->update([
+                        'opening' => $opening,
+                        'out' => $qty,
+                        'closing' => $closing
+                    ]);
+                } else {
+
+                    $product = Product::find($id);
+                    $opening = $product->qty;
+                    $closing = $opening - $qty;
+                    $product->qty = $closing;
+                    $product->save();
+                    // If the transaction doesn't exist, create a new one
+                    $transaction = new ProductTransection([
+                        'type' => 'Sale',
+                        'product_id' => $productId,
+                        'opening' => $opening,
+                        'out' => $qty,
+                        'closing' => $closing
+                    ]);
+                    $saleinvoice->transactions()->save($transaction);
+                }
             }
             $saleinvoice->products()->sync($productData);
 
@@ -218,6 +252,12 @@ class SaleInvoiceController extends Controller
                     // Adjust the product quantity as needed based on your business logic
                     $product->qty = $updateQty;
                     $product->save();
+
+                    $transaction = $saleinvoice->transactions()->where('product_id', $productToRemoveId)->first();
+
+                    if ($transaction) {
+                        $transaction->delete();
+                    }
                 }
             }
         }
