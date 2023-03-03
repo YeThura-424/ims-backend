@@ -49,4 +49,14 @@ class Product extends Model
     {
         return $this->hasMany('App\Model\ProductTransection');
     }
+
+    public function sourceConversions()
+    {
+        return $this->hasMany('App\Models\ProductConversion', 'source_product_id');
+    }
+
+    public function destinationConversions()
+    {
+        return $this->hasMany('App\Models\ProductConversion', 'destination_product_id');
+    }
 }
