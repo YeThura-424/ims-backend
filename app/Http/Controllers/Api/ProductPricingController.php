@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Http\Resources\ProductResource;
+use Validator;
 
 class ProductPricingController extends Controller
 {
@@ -73,6 +74,91 @@ class ProductPricingController extends Controller
             $status = 200;
             $message = 'Product Price created successfully.';
             $result = new ProductResource($product);
+
+            $response = [
+                'success' => true,
+                'status' => $status,
+                'message' => $message,
+                'data' => $result,
+            ];
+
+            return response()->json($response);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $product = Product::find($id);
+
+        if (is_null($product)) {
+            $status = 404;
+            $message = 'Product not found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+            ];
+
+            return response()->json($response);
+        } else {
+            $status = 200;
+            $message = 'Product retrieved successfully';
+            $result = new ProductResource($product);
+
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ];
+
+            return response()->json($response);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'sellingprice'  => ['required'],
+
+        ]);
+
+        if ($validator->fails()) {
+            $status = 400;
+            $message = 'Validation Error';
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+                'data' => $validator->errors(),
+            ];
+
+            return response()->json($response);
+        } else {
+            $productpricing = Product::find($id);
+
+            $updateSellingPrice = $request->sellingprice;
+
+            $productpricing->sellingprice = $updateSellingPrice;
+            $productpricing->save();
+
+            $status = 200;
+            $message = 'Product Price updated successfully.';
+            $result = new ProductResource($productpricing);
 
             $response = [
                 'success' => true,
