@@ -48,4 +48,31 @@ class DashboardController extends Controller
         ];
         return response()->json($response);
     }
+
+    public function getTodayImportedProducts()
+    {
+        $today = date('Y-m-d');
+        $today_imported_product = DB::table('importdetails')
+            ->join('products', 'importdetails.product_id', '=', 'products.id')
+            ->join('import_to_warehouses', 'importdetails.importtowarehouse_id', '=', 'import_to_warehouses.id')
+            ->select(
+                'products.sku',
+                'products.code',
+                DB::raw('SUM(importdetails.qty) AS qty'),
+            )
+            ->groupBy('products.sku', 'products.code')
+            ->where('import_to_warehouses.date', $today)->get();
+
+
+        $message = 'Product retrieved successfully.';
+        $status = 200;
+
+        $response = [
+            'status' => $status,
+            'success' => true,
+            'message' => $message,
+            'data' => $today_imported_product,
+        ];
+        return response()->json($response);
+    }
 }

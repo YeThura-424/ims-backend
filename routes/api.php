@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiresource('productpricing', ProductPricingController::class);
     Route::get('/minimumproduct', [DashboardController::class, 'getMinimumProductList']);
     Route::get('/todaysale', [DashboardController::class, 'getTodaySales']);
+    Route::get('/todayimportedproduct', [DashboardController::class, 'getTodayImportedProducts']);
 });
 
 
