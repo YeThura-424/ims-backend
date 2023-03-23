@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ImportToWarehouseController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductConversionController;
@@ -34,6 +35,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiresource('saleinvoice', SaleInvoiceController::class);
     Route::apiresource('productconversion', ProductConversionController::class);
     Route::apiresource('productpricing', ProductPricingController::class);
+    Route::get('/minimumproduct', [DashboardController::class, 'getMinimumProductList']);
+    Route::get('/todaysale', [DashboardController::class, 'getTodaySales']);
 });
 
 
