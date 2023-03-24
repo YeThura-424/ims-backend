@@ -19,3 +19,5 @@ Route::get('/', function () {
 
 Route::get('/stocksummaryreport', [ReportController::class, 'getStockSummaryReport']);
 Route::get('/newstocksummaryreport', [ReportController::class, 'getNewStockSummaryReport']);
+Route::get('/generatestocksummaryreport', [ReportController::class, 'generateStockSummaryReport']);
+Route::post('/stocksummary', [ReportController::class, 'stockSummaryGenerate']);

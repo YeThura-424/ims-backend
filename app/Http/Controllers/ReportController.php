@@ -54,4 +54,69 @@ class ReportController extends Controller
 
         return $stockSummary;
     }
+
+    public function generateStockSummaryReport()
+    {
+        $stockSummary = DB::table('importdetails')
+            ->join('products', 'importdetails.product_id', '=', 'products.id')
+            ->join('import_to_warehouses', 'importdetails.importtowarehouse_id', '=', 'import_to_warehouses.id')
+            ->select(
+                'products.name',
+                'products.code',
+                'import_to_warehouses.warehouse',
+                DB::raw('(SUM(importdetails.qty)) as ImportedQty'),
+
+            )
+            ->where('import_to_warehouses.warehouse', '=', 'defaultwarehouse')
+            ->groupBy('import_to_warehouses.warehouse', 'products.name', 'products.code')
+            ->get();
+        $saleSummary = DB::table('saledetails')
+            ->join('products', 'saledetails.product_id', '=', 'products.id')
+            ->select(
+                'products.name',
+                'products.code',
+                DB::raw('(SUM(saledetails.qty)) as SaleQty')
+            )
+            ->groupBy('products.name', 'products.code')
+            ->get();
+
+
+
+        $combinedData = [];
+        foreach ($stockSummary as $stock) {
+            foreach ($saleSummary as $sale) {
+                if ($stock->code == $sale->code) {
+                    $combinedData[] = [
+                        'warehouse' => $stock->warehouse,
+                        'product_name' => $sale->name,
+                        'product_code' => $sale->code,
+                        'importedQty' => $stock->ImportedQty,
+                        'saleQty' => $sale->SaleQty,
+                        'closingQty' => $stock->ImportedQty - $sale->SaleQty
+                    ];
+                }
+            }
+        }
+
+        $response = [
+            // 'stock' => $stockSummary,
+            // 'sale' => $saleSummary,
+            'data' => $combinedData
+        ];
+        return response()->json($response);
+    }
+
+    public function stockSummaryGenerate(Request $request)
+    {
+        $warehouse = $request->warehouse;
+        $query = DB::table('importdetails');
+
+        if (isset($warehouse)) {
+            $query->where('importdetails.warehouse', $warehouse);
+        }
+
+        $importedStock = $query->get();
+
+        return $importedStock;
+    }
 }
