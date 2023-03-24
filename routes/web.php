@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 /*
 |--------------------------------------------------------------------------
@@ -15,3 +16,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/stocksummaryreport', [ReportController::class, 'getStockSummaryReport']);
+Route::get('/newstocksummaryreport', [ReportController::class, 'getNewStockSummaryReport']);
