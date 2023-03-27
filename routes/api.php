@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ImportToWarehouseController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductConversionController;
 use App\Http\Controllers\Api\ProductPricingController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SaleInvoiceController;
 use App\Http\Controllers\Api\VendorController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/minimumproduct', [DashboardController::class, 'getMinimumProductList']);
     Route::get('/todaysale', [DashboardController::class, 'getTodaySales']);
     Route::get('/todayimportedproduct', [DashboardController::class, 'getTodayImportedProducts']);
+    Route::post('/saleproduct', [ReportController::class, 'getSaleProductsReport']);
 });
 
 
