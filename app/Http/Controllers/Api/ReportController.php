@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductTransectionResource;
+use App\Models\Product;
 use App\Models\ProductTransection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -117,6 +119,56 @@ class ReportController extends Controller
             $result = ProductTransectionResource::collection($stockMovement);
 
             $message = 'Stock Movement retrieved successfully.';
+            $status = 200;
+
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
+            ];
+
+            return response()->json($response);
+        }
+    }
+
+    public function getStockSummaryReport(Request $request)
+    {
+        $code = $request->code;
+        $productid = $request->productid;
+        $fromDate = $request->fromDate;
+        $toDate = $request->toDate;
+
+
+        $summary = Product::query();
+
+        if (isset($code)) {
+            $summary->where('code', $code);
+        }
+        if (isset($productid)) {
+            $summary->where('id', $productid);
+        }
+        if (isset($fromDate) && isset($toDate)) {
+            $summary->whereBetween('created_at', [$fromDate, $toDate]);
+        }
+        $stockSummary = $summary->get();
+
+        if ($stockSummary->isEmpty()) {
+            $status = 404;
+            $message = 'Not Found';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+                'data' => 'No Stock Summary is Found for the Selected Cliteria'
+            ];
+
+            return response()->json($response);
+        } else {
+            $result = ProductResource::collection($stockSummary);
+
+            $message = 'Stock Summary retrieved successfully.';
             $status = 200;
 
             $response = [
