@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductTransectionResource;
+use App\Models\ProductTransection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -71,6 +73,57 @@ class ReportController extends Controller
                 'success' => true,
                 'message' => $message,
                 'data' => $saleProducts,
+            ];
+
+            return response()->json($response);
+        }
+    }
+
+    public function getStockMovementReport(Request $request)
+    {
+
+        $type = $request->type;
+        $productid = $request->productid;
+        $fromDate = $request->fromDate;
+        $toDate = $request->toDate;
+
+
+        $movement = ProductTransection::query();
+
+        if (isset($type)) {
+            $movement->where('type', $type);
+        }
+        if (isset($productid)) {
+            $movement->where('product_id', $productid);
+        }
+        if (isset($fromDate) && isset($toDate)) {
+            $movement->whereBetween('created_at', [$fromDate, $toDate]);
+        }
+        $stockMovement = $movement->get();
+
+        if ($stockMovement->isEmpty()) {
+            $status = 404;
+            $message = 'No Transection for the Selected Cliteria';
+
+            $response = [
+                'status' => $status,
+                'success' => false,
+                'message' => $message,
+                'data' => []
+            ];
+
+            return response()->json($response);
+        } else {
+            $result = ProductTransectionResource::collection($stockMovement);
+
+            $message = 'Stock Movement retrieved successfully.';
+            $status = 200;
+
+            $response = [
+                'status' => $status,
+                'success' => true,
+                'message' => $message,
+                'data' => $result,
             ];
 
             return response()->json($response);

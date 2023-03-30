@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/todaysale', [DashboardController::class, 'getTodaySales']);
     Route::get('/todayimportedproduct', [DashboardController::class, 'getTodayImportedProducts']);
     Route::post('/saleproduct', [ReportController::class, 'getSaleProductsReport']);
+    Route::post('/stockmovement', [ReportController::class, 'getStockMovementReport']);
 });
 
 
