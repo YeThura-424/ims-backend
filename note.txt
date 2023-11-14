@@ -1,0 +1,217 @@
+use Illuminate\Support\Facades\DB;
+
+public function getStockSummaryReport($filters)
+{
+    $query = DB::table('importdetails')
+        ->join('importtowarehouses', 'importdetails.importtowarehouse_id', '=', 'importtowarehouses.id')
+        ->join('products', 'importdetails.product_id', '=', 'products.id')
+        ->select(
+            'importtowarehouses.warehouse_name',
+            'products.product_name',
+            'products.product_code',
+            DB::raw('SUM(importdetails.qty) AS closing_qty'),
+            DB::raw('AVG(importdetails.rate) AS purchase_rate')
+        )
+        ->groupBy('importtowarehouses.warehouse_name', 'products.product_name', 'products.product_code');
+
+    if (isset($filters['warehouse_name'])) {
+        $query->where('importtowarehouses.warehouse_name', $filters['warehouse_name']);
+    }
+
+    if (isset($filters['product_name'])) {
+        $query->where('products.product_name', $filters['product_name']);
+    }
+
+    if (isset($filters['product_code'])) {
+        $query->where('products.product_code', $filters['product_code']);
+    }
+
+    if (isset($filters['from_date']) && isset($filters['to_date'])) {
+        $query->whereBetween('importdetails.created_at', [$filters['from_date'], $filters['to_date']]);
+    }
+
+    $stockSummary = $query->get();
+
+    return $stockSummary;
+}
+
+
+
+use Illuminate\Support\Facades\DB;
+
+public function getStockSummaryReport()
+{
+    $stockSummary = DB::table('importdetails')
+        ->select(
+            'importdetails.warehouse_name',
+            'importdetails.product_name',
+            'importdetails.product_code',
+            DB::raw('SUM(importdetails.qty) - COALESCE(SUM(saledetails.qty), 0) AS closing_qty'),
+            'importdetails.rate AS purchase_rate'
+        )
+        ->leftJoin('saledetails', function ($join) {
+            $join->on('importdetails.product_id', '=', 'saledetails.product_id')
+                ->whereRaw('importdetails.warehouse_name = saledetails.warehouse_name');
+        })
+        ->groupBy('importdetails.warehouse_name', 'importdetails.product_name', 'importdetails.product_code', 'importdetails.rate')
+        ->get();
+
+    return $stockSummary;
+}
+ 
+
+use Illuminate\Support\Facades\DB;
+
+$stockSummary = DB::table('products')
+    ->leftJoin(DB::raw('(SELECT import_id, product_id, SUM(quantity) AS total_quantity FROM importdetails GROUP BY import_id, product_id) AS i'), 'products.product_id', '=', 'i.product_id')
+    ->leftJoin(DB::raw('(SELECT sale_id, product_id, SUM(quantity) AS total_quantity FROM saledetails GROUP BY sale_id, product_id) AS s'), 'products.product_id', '=', 's.product_id')
+    ->select('products.product_id', 'products.product_name', DB::raw('(COALESCE(i.total_quantity, 0) - COALESCE(s.total_quantity, 0)) AS remaining_quantity'))
+    ->get();
+
+
+In this example, we're using the DB facade to build the query. The leftJoin method is used to join the products table with the subqueries for imported products (i) and sold products (s).
+
+The select method is used to specify the columns we want to retrieve: product ID, product name, and the calculated remaining quantity. We use the DB::raw method to include raw SQL expressions for the remaining quantity calculation.
+
+Finally, we use the get method to execute the query and retrieve the stock summary report as a collection of objects.
+
+Note: Make sure you have the necessary models and table relationships set up in your Laravel application for the products, importdetails, and saledetails tables.
+
+
+
+public function getStockSummaryReport(Request $request)
+{
+    $warehouse = $request->warehouse;
+    $productName = $request->product;
+    $productCode = $request->code;
+    $fromDate = $request->fromDate;
+    $toDate = $request->toDate;
+    $query = DB::table('importdetails')
+        ->join('import_to_warehouses', 'importdetails.importtowarehouse_id', '=', 'import_to_warehouses.id')
+        ->join('products', 'importdetails.product_id', '=', 'products.id')
+        ->select(
+            'import_to_warehouses.warehouse',
+            'products.name',
+            'products.code',
+            DB::raw('SUM(importdetails.qty) AS closing_qty'),
+            'importdetails.rate AS purchase_rate'
+        )
+        ->groupBy('import_to_warehouses.warehouse', 'products.name', 'products.code');
+
+    if (isset($warehouse)) {
+        $query->where('import_to_warehouses.warehouse', $warehouse);
+    }
+    if (isset($productName)) {
+        $query->where('products.name', $productName);
+    }
+    if (isset($fromDate) && isset($toDate)) {
+        $query->whereBetween('importdetails.created_at', [$fromDate, $toDate]);
+    }
+
+    // Add condition to separate products based on purchase rate
+    $lowRateThreshold = 10; // Set your desired threshold for low purchase rate
+    $highRateThreshold = 20; // Set your desired threshold for high purchase rate
+    $query->where(function ($subQuery) use ($lowRateThreshold, $highRateThreshold) {
+        $subQuery->where('importdetails.rate', '<=', $lowRateThreshold)
+            ->orWhere('importdetails.rate', '>', $highRateThreshold);
+    });
+
+    $stockSummary = $query->get();
+
+    if (is_null($stockSummary)) {
+        $status = 404;
+        $message = 'No data found';
+        $response = [
+            'status' => $status,
+            'success' => false,
+            'message' => $message,
+        ];
+        return response()->json($response);
+    } else {
+        $status = 200;
+        $message = 'Report retrieved successfully';
+        $result = StockSummaryResource::collection($stockSummary);
+        $response = [
+            'status' => $status,
+            'success' => true,
+            'message' => $message,
+            'data' => $result,
+        ];
+        return response()->json($response);
+    }
+}
+
+I have importdetils table which is a pivot table from products and import_to_warehouses tables many to many relationships.
+Likewise, i have saledetails table which is a pivot table from products and sale_invoices table many to many relationships.
+I want to get the stock summary report from there and also I want to get the stock summary report from the importdetails and saledetails with
+warehouse name, product name, product code, closing qty (importdetails - saledetails) and purchase rate
+
+importdetails table has- uom,qty,rate,productamount,product_id,importtowarehouse_id
+products table has name,code
+import_to_warehouses table has warehouse,
+saledetails table has qty,rate,productamount, product_id,saleinvoice_id
+sale_invoices tabl has orderno, totalamount
+
+
+public function generateStockSummaryReport()
+{
+    $stockSummary = Product::select(
+            'import_to_warehouses.warehouse as Warehouse',
+            'products.name as ProductName',
+            'products.code as ProductCode',
+            \DB::raw('(COALESCE(imptotal.qty, 0) - COALESCE(saletotal.qty, 0)) as ClosingQty'),
+            'importdetails.rate as PurchaseRate'
+        )
+        ->leftJoin('importdetails', function ($join) {
+            $join->on('products.id', '=', 'importdetails.product_id')
+                ->groupBy('importdetails.product_id');
+        })
+        ->leftJoin('saledetails', function ($join) {
+            $join->on('products.id', '=', 'saledetails.product_id')
+                ->groupBy('saledetails.product_id');
+        })
+        ->leftJoin('import_to_warehouses', 'import_to_warehouses.id', '=', 'importdetails.importtowarehouse_id')
+        ->orderBy('import_to_warehouses.warehouse')
+        ->orderBy('products.name')
+        ->get();
+
+    return view('stock-summary-report', compact('stockSummary'));
+}
+
+
+$stockSummary = DB::table('importdetails')
+    ->join('products', 'importdetails.product_id', '=', 'products.id')
+    ->join('import_to_warehouses', 'importdetails.importtowarehouse_id', '=', 'import_to_warehouses.id')
+    ->leftJoin('saledetails', function ($join) {
+        $join->on('importdetails.product_id', '=', 'saledetails.product_id')
+             ->on('importdetails.importtowarehouse_id', '=', 'saledetails.importtowarehouse_id');
+    })
+    ->select(
+        'products.name',
+        'products.code',
+        'import_to_warehouses.warehouse',
+        DB::raw('(COALESCE(SUM(importdetails.qty),0) - COALESCE(SUM(saledetails.qty),0)) AS ClosingQty'),
+        DB::raw('(SUM(importdetails.qty)) as ImportedQty'),
+        DB::raw('(SUM(saledetails.qty)) as SaleQty')
+    )
+    ->where('import_to_warehouses.warehouse', '=', 'defaultwarehouse')
+    ->groupBy('import_to_warehouses.warehouse', 'products.name', 'products.code')
+    ->get();
+
+return $stockSummary;
+In this modified query, the leftJoin condition includes both the product_id and importtowarehouse_id columns
+ to ensure that the join is more specific and avoids duplication. This should give you the correct quantities
+  for ClosingQty, ImportedQty, and SaleQty even when there are sale records present.
+
+
+  stock purchase rate report ( filter by price,imported date)
+
+i want to developed a system like this. I want to create product with name,code and photo
+and then i want to have vendor with name and code. warehouse with name and code.
+after this, i want to make material receipt note with . in that note, i will have vendor, the warehouse i wnat to import, and the products 
+in that imported product i want to set the sell price by multiplying the purchase rate with 15 percent. and then, i want to make a sale.
+in sale, product which are already imported and left after sale should only available. 
+
+as an report i want stock summary report in which products from speific warehouse, remaining quantity should available
+
+i will be doing this with laravel and vue 3
