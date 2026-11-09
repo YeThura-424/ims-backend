@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
 
 class ProductSeeder extends Seeder
@@ -14,12 +16,21 @@ class ProductSeeder extends Seeder
      */
     public function run()
     {
+        $category1Id = Category::where('code', '000001')->firstOrFail()->id;
+        $category2Id = Category::where('code', '000002')->firstOrFail()->id;
+        $category3Id = Category::where('code', '000003')->firstOrFail()->id;
+        $brand1Id = Brand::where('code', '000001')->firstOrFail()->id;
+        $brand2Id = Brand::where('code', '000002')->firstOrFail()->id;
+        $brand3Id = Brand::where('code', '000003')->firstOrFail()->id;
+
         Product::create([
             'name' => 'GRAND ROYAL WHISKY BLACK 700ML',
             'code' => '2601000011',
             'uom' => 'BOT',
             'sku' => 'GRAND ROYAL WHISKY BLACK 700ML-BOT',
             'qty' => '24',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -28,6 +39,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'GRAND ROYAL WHISKY BLACK 700ML-BOX',
             'qty' => '5',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -36,6 +49,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOT',
             'sku' => 'GRAND ROYAL WHISKY BLACK 350ML-BOT',
             'qty' => '48',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -44,6 +59,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'GRAND ROYAL WHISKY BLACK 350ML-BOX',
             'qty' => '2',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -52,6 +69,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOT',
             'sku' => 'GRAND ROYAL WHISKY BLACK 175ML-BOT',
             'qty' => '48',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -60,6 +79,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'GRAND ROYAL WHISKY BLACK 175ML-BOX',
             'qty' => '2',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -68,6 +89,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOT',
             'sku' => 'GRAND ROYAL WHISKY BLACK 175ML-BOT',
             'qty' => '96',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -76,6 +99,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'GRAND ROYAL WHISKY BLACK 175ML-BOX',
             'qty' => '2',
+            'category_id' => $category1Id,
+            'brand_id' => $brand1Id,
 
         ]);
         Product::create([
@@ -84,6 +109,8 @@ class ProductSeeder extends Seeder
             'uom' => 'PKT',
             'sku' => 'CALSOME NUTRITIOUS CEREAL DRINK 30SX25G-PKT',
             'qty' => '30',
+            'category_id' => $category2Id,
+            'brand_id' => $brand2Id,
 
         ]);
         Product::create([
@@ -92,6 +119,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'CALSOME NUTRITIOUS CEREAL DRINK 30SX25G-BOX',
             'qty' => '3',
+            'category_id' => $category2Id,
+            'brand_id' => $brand2Id,
 
         ]);
         Product::create([
@@ -100,6 +129,8 @@ class ProductSeeder extends Seeder
             'uom' => 'PCS',
             'sku' => 'CALSOME NUTRITIOUS CEREAL DRINK 25G-PCS',
             'qty' => '120',
+            'category_id' => $category2Id,
+            'brand_id' => $brand2Id,
 
         ]);
         Product::create([
@@ -108,6 +139,8 @@ class ProductSeeder extends Seeder
             'uom' => 'PKT',
             'sku' => 'SUNDAY 3IN1 COFFEE MIX 30SX30G-PKT',
             'qty' => '40',
+            'category_id' => $category3Id,
+            'brand_id' => $brand3Id,
 
         ]);
         Product::create([
@@ -116,6 +149,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'SUNDAY 3IN1 COFFEE MIX 30SX750G-BOX',
             'qty' => '3',
+            'category_id' => $category3Id,
+            'brand_id' => $brand3Id,
 
         ]);
         Product::create([
@@ -124,6 +159,8 @@ class ProductSeeder extends Seeder
             'uom' => 'PCS',
             'sku' => 'SUNDAY 3IN1 COFFEE MIX 30G-PCS',
             'qty' => '150',
+            'category_id' => $category3Id,
+            'brand_id' => $brand3Id,
 
         ]);
         Product::create([
@@ -132,6 +169,8 @@ class ProductSeeder extends Seeder
             'uom' => 'PKT',
             'sku' => 'SUNDAY 3IN1 TEA MIX 30SX30G-PKT',
             'qty' => '50',
+            'category_id' => $category3Id,
+            'brand_id' => $brand3Id,
 
         ]);
         Product::create([
@@ -140,6 +179,8 @@ class ProductSeeder extends Seeder
             'uom' => 'BOX',
             'sku' => 'SUNDAY 3IN1 TEA MIX 30SX750G-BOX',
             'qty' => '2',
+            'category_id' => $category3Id,
+            'brand_id' => $brand3Id,
 
         ]);
         Product::create([
@@ -148,6 +189,8 @@ class ProductSeeder extends Seeder
             'uom' => 'PCS',
             'sku' => 'SUNDAY 3IN1 TEA MIX 30G-PCS',
             'qty' => '90',
+            'category_id' => $category3Id,
+            'brand_id' => $brand3Id,
 
         ]);
     }
